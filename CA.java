@@ -4,6 +4,11 @@ public class CA
     {
         int n = Integer.parseInt(args[0]);
         int r = Integer.parseInt(args[1]);
+        if(r < 0 || r > 255)
+        {
+            System.out.println("Rule must be between 0 and 255");
+            System.exit(0);
+        }
         String[] rule = new String[8];
         String[] curr = new String[n*2];
         String[] prev = new String[n*2];
