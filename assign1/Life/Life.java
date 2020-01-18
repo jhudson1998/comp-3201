@@ -1,5 +1,6 @@
 import java.awt.Color;
 import java.lang.Math;
+import java.io.*;
 
 public class Life
 {
@@ -28,11 +29,11 @@ public class Life
         Color col;
         if(curr[i][j] == 0)
         {
-            col = Color.WHITE;
+            col = Color.BLACK;
         }
         else
         {
-            col = Color.BLACK;
+            col = Color.YELLOW;
         }
 
         for (int offsetX = 0; offsetX < mag; offsetX++)
@@ -51,6 +52,22 @@ public class Life
         pic.show();     // without calling this the pic will not show
     }
 
+    public int checkEdge(int edge)
+    {
+        if(edge < 0)
+        {
+            return x-1;
+        }
+        else if(edge > (x-1))
+        {
+            return 0;
+        }
+        else
+        {
+            return edge;
+        }
+    }
+
     public void setup(char init, int n)
     {
         if(init == 'R')
@@ -60,7 +77,7 @@ public class Life
                 for (int j = 0; j < y; j++)
                 {
                     double rand = Math.random();
-                    if(rand < 0.1)
+                    if(rand < 0.2)
                     {
                         curr[i][j] = 1;
                     }
@@ -75,7 +92,53 @@ public class Life
         }
         else if(init == 'G')
         {
-
+            int j = 0;
+            if(x <= 38)
+            {
+                System.out.println("Grid size must be at least 38 to initialize with Glider");
+                System.exit(0);
+            }
+            try (BufferedReader br = new BufferedReader(new FileReader("gosper.txt")))
+            {
+                String line;
+                int count = 0;
+                while ((line = br.readLine()) != null) {
+                    for(int i=0; i < line.length(); i++)
+                    {
+                        if(line.charAt(i) == '.')
+                        {
+                            curr[i][j] = 0;
+                        }
+                        else if(line.charAt(i) == 'O')
+                        {
+                            curr[i][j] = 1;
+                        }
+                        drawCell(i,j);
+                    }
+                    j += 1;
+                }
+            }
+            catch(Exception e)
+            {
+                e.printStackTrace();
+            }
+            for(int i=38; i<x; i++)
+            {
+                for(int k=0; k<9; k++)
+                {
+                    curr[i][k] = 0;
+                    drawCell(i,k);
+                }
+            }
+            for(int i=0; i<x; i++)
+            {
+                for(int k=9; k<x; k++)
+                {
+                    curr[i][k] = 0;
+                    drawCell(i,k);
+                }
+            }
+            show();
         }
         else
         {
@@ -83,63 +146,29 @@ public class Life
             System.exit(0);
         }
 
-        prev = curr;
+        for(int i=0; i<x; i++)
+        {
+            for(int j=0; j<y; j++)
+            {
+                prev[i][j]=curr[i][j];
+            }
+        }
 
-        for(int i=0;i<n;i++)
+        for(int h=0;h<n;h++)
         {
 
-            for(int j=0;j<y;j++)
+            for(int i=0;i<x;i++)
             {
 
-                for(int k=0;k<x;k++)
+                for(int j=0;j<y;j++)
                 {
                     int neighbours = 0;
-                    int a;
-                    int b;
-                    int c;
-                    int d;
-                    if(k-1 == -1)
-                    {
-                        a = x-1;
-                    }
-                    else
-                    {
-                        a = k-1;
-                    }
-                    if(j-1 == -1)
-                    {
-                        b = x-1;
-                    }
-                    else
-                    {
-                        b = j-1;
-                    }
-                    if(k+1 == x)
-                    {
-                        c = 0;
-                    }
-                    else
-                    {
-                        c = k+1;
-                    }
-                    if(j+1 == x)
-                    {
-                        d = 0;
-                    }
-                    else
-                    {
-                        d = j+1;
-                    }
+                    int a = checkEdge(i-1);
+                    int b = checkEdge(j-1);
+                    int c = checkEdge(i+1);
+                    int d = checkEdge(j+1);
 
                     if(prev[a][b] == 1)
-                    {
-                        neighbours += 1;
-                    }
-                    if(prev[k][b] == 1)
-                    {
-                        neighbours += 1;
-                    }
-                    if(prev[c][b] == 1)
                     {
                         neighbours += 1;
                     }
@@ -147,15 +176,23 @@ public class Life
                     {
                         neighbours += 1;
                     }
-                    if(prev[c][j] == 1)
-                    {
-                        neighbours += 1;
-                    }
                     if(prev[a][d] == 1)
                     {
                         neighbours += 1;
                     }
-                    if(prev[k][d] == 1)
+                    if(prev[i][b] == 1)
+                    {
+                        neighbours += 1;
+                    }
+                    if(prev[i][d] == 1)
+                    {
+                        neighbours += 1;
+                    }
+                    if(prev[c][b] == 1)
+                    {
+                        neighbours += 1;
+                    }
+                    if(prev[c][j] == 1)
                     {
                         neighbours += 1;
                     }
@@ -164,34 +201,36 @@ public class Life
                         neighbours += 1;
                     }
 
-                    if(prev[k][j] == 1 && neighbours < 2)
+                    if((prev[i][j] == 1) && (neighbours < 2))
                     {
-                        curr[k][j] = 0;
+                        curr[i][j] = 0;
                     }
-                    else if(prev[k][j] == 1 && (neighbours == 2 || neighbours == 3))
+                    else if((prev[i][j] == 1) && ((neighbours == 2) || (neighbours == 3)))
                     {
-                        curr[k][j] = 1;
+                        curr[i][j] = 1;
                     }
-                    else if(prev[k][j] == 1 && neighbours > 3)
+                    else if((prev[i][j] == 1) && (neighbours > 3))
                     {
-                        curr[k][j] = 0;
+                        curr[i][j] = 0;
                     }
-                    else if(prev[k][j] == 0 && neighbours == 3)
+                    else if((prev[i][j] == 0) && (neighbours == 3))
                     {
-                        curr[k][j] = 1;
+                        curr[i][j] = 1;
                     }
-                    else
-                    {
-                        curr[k][j] = prev[k][j];
-                    }
-                    drawCell(k,j);
+                    drawCell(i,j);
                 }
             }
             show();
-            prev = curr;
+            for(int i=0; i<x; i++)
+            {
+                for(int j=0; j<y; j++)
+                {
+                    prev[i][j]=curr[i][j];
+                }
+            }
             try
             {
-                Thread.sleep(100);
+                Thread.sleep(30);
             }
             catch(Exception e)
             {
